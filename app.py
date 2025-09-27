@@ -300,18 +300,22 @@ def webhook():
         print("Webhook processing error:", e)
     return Response("ok", status=200, mimetype='text/plain')
 
+# Initialize database when module is loaded (for both development and production)
+use_sqlite = init_db()
+
 if __name__ == "__main__":
-    # Initialize database with error handling
-    use_sqlite = init_db()
+    # This runs only in development mode (when running python app.py directly)
+    # In production, Gunicorn will import this module and use the 'app' object
     
     # Use Railway's dynamic port or default to 5000
     port = int(os.environ.get('PORT', 5000))
-    print(f"🚀 Starting server on port {port}")
+    print(f"🚀 Starting development server on port {port}")
+    print("⚠️  WARNING: This is a development server. Use Gunicorn for production.")
     
     try:
-        app.run(host='0.0.0.0', port=port, debug=False)
+        app.run(host='0.0.0.0', port=port, debug=True)  # Debug enabled for development
     except Exception as e:
         print(f"❌ Server startup error: {e}")
         # Try alternative port
         print("🔄 Trying alternative port 8000...")
-        app.run(host='0.0.0.0', port=8000, debug=False)
+        app.run(host='0.0.0.0', port=8000, debug=True)
