@@ -18,6 +18,12 @@ GRAPH_API_VERSION = "v18.0"  # Latest stable version for consistency
 DB = "bot_state.db"
 BOT_JSON = BOT_FLOW_FILE
 
+# Validate required environment variables
+if not ACCESS_TOKEN:
+    print("❌ ERROR: WHATSAPP_TOKEN not found in environment variables")
+if not PHONE_NUMBER_ID:
+    print("❌ ERROR: WHATSAPP_PHONE_NUMBER_ID not found in environment variables")
+
 print(f"🤖 Bot initialized with:")
 print(f"   📱 WhatsApp Number: {WHATSAPP_NUMBER}")
 print(f"   📋 Bot Flow File: {BOT_JSON}")
@@ -58,8 +64,16 @@ def set_state(user_id, node_key, data=None):
     conn.commit(); conn.close()
 
 # ----- Load bot flow -----
-with open(BOT_JSON, "r", encoding="utf-8") as f:
-    bot_flow = json.load(f)
+try:
+    with open(BOT_JSON, "r", encoding="utf-8") as f:
+        bot_flow = json.load(f)
+    print(f"✅ Bot flow loaded successfully from {BOT_JSON}")
+except FileNotFoundError:
+    print(f"❌ ERROR: Bot flow file {BOT_JSON} not found")
+    bot_flow = {"operators": {}}
+except json.JSONDecodeError as e:
+    print(f"❌ ERROR: Invalid JSON in {BOT_JSON}: {e}")
+    bot_flow = {"operators": {}}
 
 # map: node_key -> properties, and also title -> node_key
 operators = bot_flow.get("operators", {})
@@ -237,4 +251,6 @@ def webhook():
 
 if __name__ == "__main__":
     init_db()
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    # Use Railway's dynamic port or default to 5000
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
