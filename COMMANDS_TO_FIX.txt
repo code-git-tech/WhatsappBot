@@ -1,0 +1,22 @@
+# EXACT COMMANDS TO FIX YOUR WHATSAPP BOT
+# Run these in order to get your bot responding on +15557667459
+
+# 1. Start bot server (Terminal 1)
+C:/Users/sarve/Desktop/bot/.venv/Scripts/python.exe app.py
+
+# 2. Expose to internet (Terminal 2 - after downloading ngrok)
+# Download ngrok from https://ngrok.com/download first
+# Extract ngrok.exe to C:\Users\sarve\Desktop\bot\
+.\ngrok http 5000
+
+# 3. Update your Facebook webhook with the ngrok URL
+# Go to https://developers.facebook.com/
+# Find your WhatsApp app -> WhatsApp -> Configuration
+# Set Webhook URL: https://xxxxx.ngrok.io/webhook (replace xxxxx with your ngrok URL)
+# Set Verify Token: test_verify_token
+
+# 4. Get real WhatsApp credentials and update .env:
+# WHATSAPP_TOKEN=EAAyour_real_facebook_token
+# Keep: WHATSAPP_VERIFY_TOKEN=test_verify_token
+
+# 5. Test by sending "Hi" to +15557667459 from any WhatsApp

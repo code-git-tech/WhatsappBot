@@ -1,0 +1,61 @@
+🚀 NGROK SETUP STEPS - FOLLOW IN ORDER
+
+✅ You already have ngrok installed (version 3.24.0-msix)
+
+📋 NEXT STEPS TO GET YOUR BOT ONLINE:
+
+STEP 1: Get ngrok Authtoken
+--------------------------
+1. Open browser: https://dashboard.ngrok.com/signup
+2. Sign up for FREE account (use email/Google/GitHub)
+3. After signup, go to: https://dashboard.ngrok.com/get-started/your-authtoken
+4. Copy the authtoken (looks like: 2abc123def456...)
+
+STEP 2: Authenticate ngrok
+-------------------------
+Run this command (replace YOUR_TOKEN with actual token):
+```
+ngrok config add-authtoken YOUR_TOKEN_HERE
+```
+
+STEP 3: Start ngrok Tunnel
+-------------------------
+Run this command:
+```
+ngrok http 5000
+```
+
+You'll see output like:
+```
+ngrok                                                          
+
+Session Status                online                           
+Account                       your@email.com (Plan: Free)     
+Version                       3.24.0                          
+Region                        United States (us)              
+Latency                       45ms                            
+Web Interface                 http://127.0.0.1:4040          
+Forwarding                    https://abc123.ngrok-free.app -> http://localhost:5000
+
+Connections                   ttl     opn     rt1     rt5     p50     p90  
+                              0       0       0.00    0.00    0.00    0.00 
+```
+
+STEP 4: Copy Your Bot's Internet URL
+-----------------------------------
+From the ngrok output, copy this URL: https://abc123.ngrok-free.app
+This is your bot's internet address!
+
+STEP 5: Test Bot is Accessible
+-----------------------------
+Open browser and go to: https://abc123.ngrok-free.app/webhook
+You should see: "Webhook is working!"
+
+🎯 CURRENT STATUS:
+- ✅ Bot Server: Running on localhost:5000  
+- ✅ ngrok Installed: Ready to use
+- ⏳ ngrok Auth: Need to authenticate
+- ⏳ Tunnel: Need to start tunnel
+- ⏳ WhatsApp Config: Need webhook URL
+
+After completing these steps, your bot will be accessible from anywhere on the internet!

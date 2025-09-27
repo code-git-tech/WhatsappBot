@@ -1,0 +1,57 @@
+# WHATSAPP BOT SETUP CHECKLIST
+# Follow these steps in order to get your bot responding on +15557667459
+
+## ✅ CHECKLIST (Check off as you complete each step):
+
+### STEP 1: Facebook Developers Setup
+□ Go to https://developers.facebook.com/
+□ Create/find WhatsApp Business API app  
+□ Add phone number +15557667459
+□ Copy Access Token (starts with EAA)
+□ Copy Phone Number ID (16 digits)
+
+### STEP 2: Update Environment File
+□ Open .env file in bot folder
+□ Replace WHATSAPP_TOKEN with real token
+□ Replace WHATSAPP_PHONE_NUMBER_ID with real ID
+□ Keep WHATSAPP_VERIFY_TOKEN=my_secure_verify_token_123
+
+### STEP 3: Download ngrok
+□ Go to https://ngrok.com/download
+□ Download Windows version
+□ Extract ngrok.exe to C:\Users\sarve\Desktop\bot\
+
+### STEP 4: Start Bot Server
+□ Open Terminal 1
+□ Run: C:/Users/sarve/Desktop/bot/.venv/Scripts/python.exe app.py
+□ Should show: "Running on http://127.0.0.1:5000"
+
+### STEP 5: Start ngrok Tunnel  
+□ Open Terminal 2
+□ Run: .\ngrok http 5000
+□ Copy the https://xxxxx.ngrok.io URL
+
+### STEP 6: Configure Facebook Webhook
+□ Go to Facebook Developers → WhatsApp → Configuration
+□ Click "Configure Webhook"
+□ Set Callback URL: https://xxxxx.ngrok.io/webhook
+□ Set Verify Token: my_secure_verify_token_123
+□ Check "messages" in Webhook Fields
+□ Click "Verify and Save" → Should show success
+
+### STEP 7: Test Bot
+□ Send "Hi" to +15557667459 from any WhatsApp
+□ Should get response: "Greetings and welcome to Dooper Health!"
+□ Should show medical service menu
+
+## 🎯 AFTER COMPLETION:
+- Messages to +15557667459 will trigger your bot
+- Bot responses appear in WhatsApp Business app
+- Conversations follow your dooper_bot.json flow (441 nodes)
+- Handles medical consultations, appointments, prescriptions, etc.
+
+## ❗ TROUBLESHOOTING:
+- If no response: Check ngrok URL in Facebook webhook
+- If webhook fails: Check verify token matches .env file
+- If API errors: Check access token is valid and not expired
+- If server errors: Restart bot server (python app.py)
