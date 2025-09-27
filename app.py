@@ -146,12 +146,24 @@ def send_whatsapp_text(to, text):
         "type": "text",
         "text": {"body": text}
     }
-    r = requests.post(url, headers=headers, json=payload)
     try:
-        r.raise_for_status()
-    except Exception as e:
-        print("Failed to send message:", r.status_code, r.text)
-    return r.json()
+        r = requests.post(url, headers=headers, json=payload, timeout=15)
+        try:
+            r.raise_for_status()
+        except Exception:
+            # Log detailed failure but do not crash the bot
+            print("❌ Failed to send message to WhatsApp API:", r.status_code, r.text[:300])
+        try:
+            return r.json()
+        except ValueError:
+            # Non-JSON response (rare but possible on errors)
+            return {"error": True, "raw": r.text}
+    except requests.exceptions.Timeout:
+        print("⏱️ Timeout sending message to WhatsApp API")
+        return {"error": True, "reason": "timeout"}
+    except requests.exceptions.RequestException as e:
+        print(f"🌐 Network error sending message: {e}")
+        return {"error": True, "reason": str(e)}
 
 # ----- Simple matching: by number or by exact answer text -----
 def match_output(node_props, incoming_text):
@@ -310,7 +322,7 @@ if __name__ == "__main__":
     # Use Railway's dynamic port or default to 5000
     port = int(os.environ.get('PORT', 5000))
     print(f"🚀 Starting development server on port {port}")
-    print("⚠️  WARNING: This is a development server. Use Gunicorn for production.")
+    print("⚠️  WARNING: This is the Flask built-in dev server. In production Railway uses Waitress (Procfile).")
     
     try:
         app.run(host='0.0.0.0', port=port, debug=True)  # Debug enabled for development
