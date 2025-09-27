@@ -32,36 +32,77 @@ print(f"   🔑 Has Access Token: {'Yes' if ACCESS_TOKEN and ACCESS_TOKEN != 'yo
 
 app = Flask(__name__)
 
-# ----- DB helpers -----
+# ----- DB helpers with fallback -----
+# In-memory storage as fallback
+memory_storage = {}
+
 def init_db():
-    conn = sqlite3.connect(DB)
-    c = conn.cursor()
-    c.execute("""CREATE TABLE IF NOT EXISTS user_state (
-                    user_id TEXT PRIMARY KEY,
-                    node_key TEXT,
-                    data TEXT
-                )""")
-    conn.commit(); conn.close()
+    try:
+        conn = sqlite3.connect(DB)
+        c = conn.cursor()
+        c.execute("""CREATE TABLE IF NOT EXISTS user_state (
+                        user_id TEXT PRIMARY KEY,
+                        node_key TEXT,
+                        data TEXT
+                    )""")
+        conn.commit()
+        conn.close()
+        print("✅ SQLite database initialized successfully")
+        return True
+    except Exception as e:
+        print(f"⚠️ SQLite failed, using in-memory storage: {e}")
+        return False
+
+# Global flag to track if SQLite is available
+use_sqlite = True
 
 def get_state(user_id):
-    conn = sqlite3.connect(DB)
-    c = conn.cursor()
-    c.execute("SELECT node_key, data FROM user_state WHERE user_id=?", (user_id,))
-    row = c.fetchone()
-    conn.close()
-    if row:
-        node_key, data = row
-        return node_key, json.loads(data) if data else {}
+    global use_sqlite
+    
+    if use_sqlite:
+        try:
+            conn = sqlite3.connect(DB)
+            c = conn.cursor()
+            c.execute("SELECT node_key, data FROM user_state WHERE user_id=?", (user_id,))
+            row = c.fetchone()
+            conn.close()
+            if row:
+                node_key, data = row
+                return node_key, json.loads(data) if data else {}
+            return None, {}
+        except Exception as e:
+            print(f"⚠️ SQLite error, switching to memory storage: {e}")
+            use_sqlite = False
+    
+    # Fallback to in-memory storage
+    if user_id in memory_storage:
+        state = memory_storage[user_id]
+        return state.get('node_key'), state.get('data', {})
     return None, {}
 
 def set_state(user_id, node_key, data=None):
-    data_json = json.dumps(data or {})
-    conn = sqlite3.connect(DB)
-    c = conn.cursor()
-    c.execute("""INSERT INTO user_state(user_id, node_key, data) VALUES(?,?,?)
-                 ON CONFLICT(user_id) DO UPDATE SET node_key=excluded.node_key, data=excluded.data""",
-              (user_id, node_key, data_json))
-    conn.commit(); conn.close()
+    global use_sqlite
+    
+    if use_sqlite:
+        try:
+            data_json = json.dumps(data or {})
+            conn = sqlite3.connect(DB)
+            c = conn.cursor()
+            c.execute("""INSERT INTO user_state(user_id, node_key, data) VALUES(?,?,?)
+                         ON CONFLICT(user_id) DO UPDATE SET node_key=excluded.node_key, data=excluded.data""",
+                      (user_id, node_key, data_json))
+            conn.commit()
+            conn.close()
+            return
+        except Exception as e:
+            print(f"⚠️ SQLite error, switching to memory storage: {e}")
+            use_sqlite = False
+    
+    # Fallback to in-memory storage
+    memory_storage[user_id] = {
+        'node_key': node_key,
+        'data': data or {}
+    }
 
 # ----- Load bot flow -----
 try:
@@ -198,9 +239,19 @@ def handle_user_message(user_id, text):
         send_whatsapp_text(user_id, "Sorry, I didn't understand. " + q)
 
 # ----- Webhook endpoints -----
-@app.route("/", methods=["GET"])  # simple health check (not used for Meta verification)
+@app.route("/", methods=["GET"])  # Health check for Railway
 def root_health():
-    return jsonify({"status": "ok", "message": "Bot running"}), 200
+    storage_type = "SQLite" if use_sqlite else "In-Memory"
+    return jsonify({
+        "status": "ok", 
+        "message": "WhatsApp Medical Bot is running",
+        "storage": storage_type,
+        "bot_flow_loaded": len(operators) > 0
+    }), 200
+
+@app.route("/health", methods=["GET"])  # Additional health endpoint
+def health_check():
+    return "OK", 200
 
 @app.route("/webhook", methods=["GET", "POST"])
 def webhook():
@@ -250,7 +301,17 @@ def webhook():
     return Response("ok", status=200, mimetype='text/plain')
 
 if __name__ == "__main__":
-    init_db()
+    # Initialize database with error handling
+    use_sqlite = init_db()
+    
     # Use Railway's dynamic port or default to 5000
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    print(f"🚀 Starting server on port {port}")
+    
+    try:
+        app.run(host='0.0.0.0', port=port, debug=False)
+    except Exception as e:
+        print(f"❌ Server startup error: {e}")
+        # Try alternative port
+        print("🔄 Trying alternative port 8000...")
+        app.run(host='0.0.0.0', port=8000, debug=False)
