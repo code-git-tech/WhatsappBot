@@ -13,7 +13,7 @@ VERIFY_TOKEN = os.getenv("WHATSAPP_VERIFY_TOKEN", "verify_token_example")
 WHATSAPP_NUMBER = os.getenv("WHATSAPP_NUMBER", "+15557667459")
 BOT_FLOW_FILE = os.getenv("BOT_FLOW_FILE", "dooper_bot.json")
 
-GRAPH_API_VERSION = "v18.0"  # Latest stable version for consistency
+GRAPH_API_VERSION = "v20.0"  # Updated to a newer stable Graph API version for consistency across scripts
 
 DB = "bot_state.db"
 BOT_JSON = BOT_FLOW_FILE
